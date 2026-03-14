@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>小紅 · Arii Rou · Choose Language</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400;1,700&family=Space+Mono&family=Noto+Sans+TC&display=swap"
+    rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      background: #0d0008;
+      font-family: 'Noto Sans TC', sans-serif;
+      cursor: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* STAR FIELD */
+    #starfield {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* CUSTOM CURSOR */
+    #dot {
+      width: 10px;
+      height: 10px;
+      background: #ff6eb4;
+      border-radius: 50%;
+      position: fixed;
+      z-index: 9999;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+    }
+
+    #dot-ring {
+      width: 34px;
+      height: 34px;
+      border: 1.5px solid rgba(255, 110, 180, .5);
+      border-radius: 50%;
+      position: fixed;
+      z-index: 9998;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: width .18s, height .18s;
+    }
+
+    /* MAIN STAGE */
+    #stage {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      text-align: center;
+      transition: transform 1.6s cubic-bezier(.55, 0, 1, .45), opacity 1.6s ease;
+    }
+
+    #stage.warp {
+      transform: scale(0.02) translateZ(0);
+      opacity: 0;
+    }
+
+    /* LOGO */
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(28px, 6vw, 56px);
+      color: #fff;
+      letter-spacing: 4px;
+      margin-bottom: 8px;
+      animation: fadeIn 1.2s ease forwards;
+      opacity: 0;
+    }
+
+    .logo em {
+      color: #ff6eb4;
+    }
+
+    .tagline {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 5px;
+      text-transform: uppercase;
+      color: rgba(255, 110, 180, .6);
+      margin-bottom: 56px;
+      animation: fadeIn 1.2s .3s ease forwards;
+      opacity: 0;
+    }
+
+    /* DIVIDER STAR */
+    .star-divider {
+      font-size: 18px;
+      margin-bottom: 48px;
+      color: #ff6eb4;
+      animation: fadeIn 1s .5s forwards, pulse 2s 1.5s ease-in-out infinite;
+      opacity: 0;
+    }
+
+    /* PROMPT */
+    .prompt {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, .35);
+      margin-bottom: 36px;
+      animation: fadeIn 1s .6s forwards;
+      opacity: 0;
+    }
+
+    /* LANGUAGE CARDS */
+    .cards {
+      display: flex;
+      gap: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeIn 1s .8s forwards;
+      opacity: 0;
+    }
+
+    .card {
+      width: clamp(140px, 22vw, 200px);
+      padding: 36px 24px;
+      border-radius: 20px;
+      border: 1.5px solid rgba(255, 110, 180, .25);
+      background: rgba(255, 255, 255, .04);
+      backdrop-filter: blur(12px);
+      cursor: none;
+      transition: border-color .3s, background .3s, transform .3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 50% 0%, rgba(255, 110, 180, .12), transparent 70%);
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    .card:hover {
+      border-color: rgba(255, 110, 180, .7);
+      background: rgba(255, 110, 180, .08);
+      transform: translateY(-6px) scale(1.03);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card:active {
+      transform: translateY(-2px) scale(0.98);
+    }
+
+    .card-glyph {
+      font-size: 42px;
+      margin-bottom: 16px;
+      display: block;
+      filter: drop-shadow(0 0 12px rgba(255, 110, 180, .4));
+    }
+
+    .card-lang {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 6px;
+    }
+
+    .card-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: rgba(255, 110, 180, .6);
+      margin-bottom: 12px;
+    }
+
+    .card-hint {
+      font-size: 11px;
+      color: rgba(255, 255, 255, .3);
+      line-height: 1.6;
+    }
+
+    .card-arrow {
+      display: inline-block;
+      margin-top: 14px;
+      font-size: 16px;
+      color: rgba(255, 110, 180, .4);
+      transition: transform .3s, color .3s;
+    }
+
+    .card:hover .card-arrow {
+      transform: translateX(4px);
+      color: #ff6eb4;
+    }
+
+    /* WORMHOLE OVERLAY */
+    #wormhole {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .3s;
+    }
+
+    #wormhole.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    #worm-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #worm-text {
+      position: relative;
+      z-index: 2;
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: clamp(20px, 4vw, 32px);
+      color: white;
+      letter-spacing: 4px;
+      animation: warpPulse .6s ease-in-out infinite alternate;
+      text-shadow: 0 0 30px rgba(255, 110, 180, .9);
+      opacity: 0;
+      transition: opacity .4s;
+    }
+
+    #worm-text.show {
+      opacity: 1;
+    }
+
+    /* LOADER */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: #0d0008;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .5s;
+    }
+
+    #loader.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .loader-kirby {
+      animation: bounce .45s ease-in-out infinite alternate;
+    }
+
+    .loader-kirby svg {
+      width: 90px;
+      height: 90px;
+      filter: drop-shadow(0 6px 18px rgba(255, 110, 180, .6));
+    }
+
+    .bar-wrap {
+      width: 240px;
+      height: 4px;
+      background: rgba(255, 110, 180, .15);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff6eb4, #ff2d78);
+      border-radius: 999px;
+      transition: width .08s linear;
+    }
+
+    .loader-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: rgba(255, 110, 180, .5);
+      text-transform: uppercase;
+    }
+
+    /* FOOTER */
+    .footer-note {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      letter-spacing: 2px;
+      color: rgba(255, 255, 255, .15);
+      text-transform: uppercase;
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    /* KEYFRAMES */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: .5;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0);
+      }
+
+      to {
+        transform: translateY(-12px);
+      }
+    }
+
+    @keyframes warpPulse {
+      from {
+        letter-spacing: 4px;
+      }
+
+      to {
+        letter-spacing: 8px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <canvas id="starfield"></canvas>
+  <div id="dot"></div>
+  <div id="dot-ring"></div>
+
+  <!-- MAIN STAGE -->
+  <div id="stage">
+    <div class="logo"><em>小紅</em> · Arii Rou</div>
+    <div class="tagline">Fashion Model · 時裝模特</div>
+    <div class="star-divider">✦</div>
+    <div class="prompt">Choose your language · 選擇語言</div>
+    <div class="cards">
+
+      <div class="card" onclick="enterWormhole('en')">
+        <span class="card-glyph">🌸</span>
+        <div class="card-lang">English</div>
+        <div class="card-sub">EN · English</div>
+        <div class="card-hint">View portfolio in English</div>
+        <div class="card-arrow">→</div>
+      </div>
+
+      <div class="card" onclick="enterWormhole('zh')">
+        <span class="card-glyph">🌸</span>
+        <div class="card-lang">繁體中文</div>
+        <div class="card-sub">ZH · Traditional Chinese</div>
+        <div class="card-hint">以繁體中文瀏覽作品集</div>
+        <div class="card-arrow">→</div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- WORMHOLE OVERLAY -->
+  <div id="wormhole">
+    <canvas id="worm-canvas"></canvas>
+    <div id="worm-text">Entering wormhole...</div>
+  </div>
+
+  <!-- LOADER -->
+  <div id="loader">
+    <div class="loader-kirby">
+      <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="60" cy="112" rx="28" ry="7" fill="rgba(192,0,60,.18)" />
+        <ellipse cx="60" cy="74" rx="38" ry="36" fill="#ff94c2" />
+        <circle cx="60" cy="55" r="34" fill="#ffb3d6" />
+        <ellipse cx="48" cy="50" rx="7" ry="8.5" fill="#1a1a3e" />
+        <ellipse cx="72" cy="50" rx="7" ry="8.5" fill="#1a1a3e" />
+        <circle cx="51" cy="47" r="3" fill="white" />
+        <circle cx="75" cy="47" r="3" fill="white" />
+        <ellipse cx="38" cy="62" rx="8" ry="6" fill="#ff6eb4" opacity=".55" />
+        <ellipse cx="82" cy="62" rx="8" ry="6" fill="#ff6eb4" opacity=".55" />
+        <path d="M50 68 Q60 76 70 68" stroke="#c0003c" stroke-width="3" fill="none" stroke-linecap="round" />
+        <ellipse cx="44" cy="104" rx="13" ry="9" fill="#ff3355" />
+        <ellipse cx="76" cy="104" rx="13" ry="9" fill="#ff3355" />
+        <ellipse cx="101" cy="58" rx="13" ry="9" fill="#ffb3d6" transform="rotate(30 101 58)" />
+        <ellipse cx="22" cy="68" rx="11" ry="8" fill="#ffb3d6" transform="rotate(-15 22 68)" />
+      </svg>
+    </div>
+    <div class="bar-wrap">
+      <div class="bar-fill" id="bar"></div>
+    </div>
+    <div class="loader-label" id="loader-label">Loading...</div>
+  </div>
+
+  <div class="footer-note">✦ arii.rou · taichung &amp; taipei ✦</div>
+
+  <script>
+    // ── CURSOR ──
+    const dot = document.getElementById('dot'), ring = document.getElementById('dot-ring');
+    let mx = 0, my = 0, rx = 0, ry = 0;
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; dot.style.left = mx + 'px'; dot.style.top = my + 'px'; });
+    (function rf() { rx += (mx - rx) * .1; ry += (my - ry) * .1; ring.style.left = rx + 'px'; ring.style.top = ry + 'px'; requestAnimationFrame(rf); })();
+    document.querySelectorAll('.card').forEach(c => {
+      c.addEventListener('mouseenter', () => { ring.style.width = '52px'; ring.style.height = '52px'; });
+      c.addEventListener('mouseleave', () => { ring.style.width = '34px'; ring.style.height = '34px'; });
+    });
+
+    // ── STARFIELD ──
+    const sf = document.getElementById('starfield');
+    const sctx = sf.getContext('2d');
+    let stars = [];
+    function resizeSF() { sf.width = innerWidth; sf.height = innerHeight; initStars(); }
+    function initStars() {
+      stars = [];
+      for (let i = 0; i < 220; i++) stars.push({
+        x: Math.random() * sf.width, y: Math.random() * sf.height,
+        r: Math.random() * 1.4 + .2,
+        twinkle: Math.random() * Math.PI * 2,
+        speed: Math.random() * .03 + .01,
+        color: `hsl(${310 + Math.random() * 60},${50 + Math.random() * 50}%,${75 + Math.random() * 25}%)`
+      });
+    }
+    function drawStars() {
+      sctx.clearRect(0, 0, sf.width, sf.height);
+      const t = Date.now() * .001;
+      stars.forEach(s => {
+        const a = 0.2 + Math.sin(s.twinkle + t * s.speed) * .7;
+        sctx.globalAlpha = Math.max(0, a);
+        sctx.fillStyle = s.color;
+        sctx.beginPath();
+        sctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        sctx.fill();
+      });
+      sctx.globalAlpha = 1;
+      requestAnimationFrame(drawStars);
+    }
+    resizeSF();
+    window.addEventListener('resize', resizeSF);
+    drawStars();
+
+    // ── WORMHOLE ──
+    const wc = document.getElementById('worm-canvas');
+    const wctx = wc.getContext('2d');
+    let wT = 0, wormRings = [], wormRAF, destUrl = '';
+
+    function resizeWC() { wc.width = innerWidth; wc.height = innerHeight; }
+    resizeWC();
+    window.addEventListener('resize', resizeWC);
+
+    function initWormRings() {
+      wormRings = [];
+      for (let i = 0; i < 80; i++) {
+        wormRings.push({
+          z: i / 80,
+          hue: 310 + Math.random() * 60,
+          speed: .012 + Math.random() * .008,
+        });
+      }
+    }
+    initWormRings();
+
+    function drawWormhole() {
+      const W = wc.width, H = wc.height;
+      wctx.fillStyle = 'rgba(13,0,8,0.25)';
+      wctx.fillRect(0, 0, W, H);
+      const cx = W / 2, cy = H / 2;
+      wormRings.forEach((r, i) => {
+        r.z -= r.speed * (1 + wT * .08);
+        if (r.z < 0) r.z = 1;
+        const perspective = 1 / (1 - r.z * 0.98);
+        const rx2 = perspective * 140, ry2 = perspective * 90;
+        const alpha = Math.min(1, r.z * 1.8) * (1 - Math.pow(r.z, 8));
+        wctx.beginPath();
+        wctx.ellipse(cx, cy, rx2, ry2, 0, 0, Math.PI * 2);
+        wctx.strokeStyle = `hsla(${r.hue},80%,${60 + r.z * 30}%,${alpha})`;
+        wctx.lineWidth = perspective * 1.2;
+        wctx.stroke();
+        if (i % 4 === 0) {
+          const ang = r.z * Math.PI * 12;
+          const sx = cx + Math.cos(ang) * rx2 * .9, sy = cy + Math.sin(ang) * ry2 * .9;
+          const ex = cx + Math.cos(ang) * rx2 * 1.15, ey = cy + Math.sin(ang) * ry2 * 1.15;
+          wctx.beginPath();
+          wctx.moveTo(sx, sy); wctx.lineTo(ex, ey);
+          wctx.strokeStyle = `hsla(${r.hue},90%,85%,${alpha * .6})`;
+          wctx.lineWidth = .8;
+          wctx.stroke();
+        }
+      });
+      // central glow
+      const g = wctx.createRadialGradient(cx, cy, 0, cx, cy, 80);
+      g.addColorStop(0, 'rgba(255,110,180,.35)');
+      g.addColorStop(1, 'rgba(255,110,180,0)');
+      wctx.fillStyle = g;
+      wctx.beginPath(); wctx.arc(cx, cy, 80, 0, Math.PI * 2); wctx.fill();
+    }
+
+    function animWormhole() { wT++; drawWormhole(); wormRAF = requestAnimationFrame(animWormhole); }
+
+    function enterWormhole(lang) {
+      // ── SET YOUR LINKS HERE ──
+      destUrl = lang === 'en' ? 'arii-rou-kirby-portfolio en.html' : 'arii-rou-kirby-portfolio zh.html';
+
+      const wormText = lang === 'en' ? 'Entering wormhole...' : '進入蟲洞中...';
+      document.getElementById('worm-text').textContent = wormText;
+
+      // Stage shrinks into the centre
+      document.getElementById('stage').classList.add('warp');
+
+      // Wormhole fires up
+      const wh = document.getElementById('wormhole');
+      wh.classList.add('active');
+      animWormhole();
+      setTimeout(() => document.getElementById('worm-text').classList.add('show'), 200);
+
+      // After the rush → loader
+      setTimeout(() => {
+        cancelAnimationFrame(wormRAF);
+        wh.style.opacity = '0';
+        const loader = document.getElementById('loader');
+        loader.classList.add('show');
+        document.getElementById('loader-label').textContent = lang === 'en' ? 'Loading portfolio...' : '載入作品集中...';
+        runLoader(lang);
+      }, 2200);
+    }
+
+    function runLoader(lang) {
+      const bar = document.getElementById('bar');
+      let p = 0;
+      const iv = setInterval(() => {
+        p += Math.random() * 16 + 4;
+        if (p >= 100) {
+          p = 100; bar.style.width = '100%';
+          clearInterval(iv);
+          // Navigate after bar fills
+          setTimeout(() => window.location.href = destUrl, 300);
+        }
+        bar.style.width = p + '%';
+      }, 100);
+    }
+  </script>
+</body>
+
+</html>
